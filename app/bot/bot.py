@@ -13,9 +13,8 @@ from aiogram_dialog.api.entities import DIALOG_EVENT_NAME
 from aiogram_dialog.api.exceptions import UnknownIntent, UnknownState
 from fluentogram import TranslatorHub
 
-from app.bot.dialogs.flows.settings.dialogs import settings_dialog
-from app.bot.dialogs.flows.start.dialogs import start_dialog
-from app.bot.handlers.commands import commands_router
+from app.bot.dialogs.flows import dialogs
+from app.bot.handlers import routers
 from app.bot.handlers.errors import on_unknown_intent, on_unknown_state
 from app.bot.i18n.translator_hub import create_translator_hub
 from app.bot.middlewares.database import DataBaseMiddleware
@@ -85,7 +84,10 @@ async def main():
     )
 
     logger.info("Including routers")
-    dp.include_routers(commands_router, start_dialog, settings_dialog)
+    dp.include_routers(*routers)
+
+    logger.info("Including dialogs")
+    dp.include_routers(*dialogs)
 
     logger.info("Including middlewares")
     dp.update.middleware(DataBaseMiddleware())
@@ -93,6 +95,7 @@ async def main():
     dp.update.middleware(ShadowBanMiddleware())
     dp.update.middleware(TranslatorRunnerMiddleware())
 
+    logger.info("Including error middlewares")
     dp.errors.middleware(DataBaseMiddleware())
     dp.errors.middleware(GetUserMiddleware())
     dp.errors.middleware(ShadowBanMiddleware())
