@@ -43,11 +43,12 @@ You can learn how to develop telegram bots using the `aiogram` framework in the 
 │   │   │   │   │   ├── handlers.py
 │   │   │   │   │   ├── keyboards.py
 │   │   │   │   │   └── states.py
-│   │   │   │   └── 📁 start/
-│   │   │   │       ├── dialogs.py
-│   │   │   │       ├── getters.py
-│   │   │   │       ├── handlers.py
-│   │   │   │       └── states.py
+│   │   │   │   ├── 📁 start/
+│   │   │   │   │   ├── dialogs.py
+│   │   │   │   │   ├── getters.py
+│   │   │   │   │   ├── handlers.py
+│   │   │   │   │   └── states.py
+│   │   │   │   └── __init__.py
 │   │   │   └── 📁 widgets/
 │   │   │       └── i18n.py
 │   │   ├── 📁 enums/
@@ -56,6 +57,7 @@ You can learn how to develop telegram bots using the `aiogram` framework in the 
 │   │   ├── 📁 filters/
 │   │   │   └── dialog_filters.py
 │   │   ├── 📁 handlers/
+│   │   │   ├── __init__.py
 │   │   │   ├── commands.py
 │   │   │   └── errors.py
 │   │   ├── 📁 i18n/
