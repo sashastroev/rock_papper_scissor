@@ -6,7 +6,7 @@ from logging.config import fileConfig
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from alembic import context
-from config.config import settings
+from config.config import get_config
 
 # Alembic Config object
 config = context.config
@@ -19,7 +19,8 @@ if config.config_file_name is not None:
 target_metadata = None
 
 # Database URL for SQLAlchemy
-url = f"postgresql+psycopg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres.host}:{settings.postgres.port}/{settings.postgres.name}"
+app_config = get_config()
+url = f"postgresql+psycopg://{app_config.postgres.user}:{app_config.postgres.password}@{app_config.postgres.host}:{app_config.postgres.port}/{app_config.postgres.name}"
 engine = create_async_engine(url)
 
 

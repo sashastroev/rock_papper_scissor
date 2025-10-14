@@ -6,27 +6,28 @@ from nats.aio.client import Client as NATS
 from nats.js import JetStreamContext
 from nats.js.api import StreamConfig
 
-from config.config import settings
+from config.config import get_config
 
 
 async def main():
+    config = get_config()
     nc = NATS()
-    await nc.connect(servers=settings.nats.servers)
+    await nc.connect(servers=config.nats.servers)
 
     js: JetStreamContext = nc.jetstream()
 
-    stream_name = settings.nats.delayed_consumer_stream
+    stream_name = config.nats.delayed_consumer_stream
 
     # Конфигурация стрима
-    config = StreamConfig(
+    stream_config = StreamConfig(
         name=stream_name,
-        subjects=[settings.nats.delayed_consumer_subject],
+        subjects=[config.nats.delayed_consumer_subject],
         retention="limits",  # Политика хранения сообщений (limits, interest, workqueue)
         storage="file",  # Тип хранения сообщений (file, memory)
     )
 
     # Создание стрима
-    await js.add_stream(config)
+    await js.add_stream(stream_config)
 
     print(f"Stream `{stream_name}` created")
 

@@ -27,48 +27,50 @@ from app.infrastructure.storage.nats_connect import connect_to_nats
 from app.infrastructure.storage.storage.nats_storage import NatsStorage
 from app.services.delay_service.start_consumer import start_delayed_consumer
 from app.services.scheduler.taskiq_broker import broker, redis_source
-from config.config import settings
+from config.config import get_config
 
 logger = logging.getLogger(__name__)
 
 
 async def main():
     logger.info("Starting bot")
+    
+    config = get_config()
 
-    nc, js = await connect_to_nats(servers=settings.nats.servers)
+    nc, js = await connect_to_nats(servers=config.nats.servers)
 
     storage: NatsStorage = await NatsStorage(
         nc=nc, js=js, key_builder=DefaultKeyBuilder(with_destiny=True, separator=".")
     ).create_storage()
 
     bot = Bot(
-        token=settings.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode(settings.bot.parse_mode)),
+        token=config.bot.token,
+        default=DefaultBotProperties(parse_mode=ParseMode(config.bot.parse_mode)),
     )
     dp = Dispatcher(storage=storage)
-    if settings.cache.use_cache:
+    if config.cache.use_cache:
         cache_pool: redis.asyncio.Redis = await get_redis_pool(
-            db=settings.redis.database,
-            host=settings.redis.host,
-            port=settings.redis.port,
-            username=settings.redis_username,
-            password=settings.redis_password,
+            db=config.redis.database,
+            host=config.redis.host,
+            port=config.redis.port,
+            username=config.redis.username,
+            password=config.redis.password,
         )
         dp.workflow_data.update(_cache_pool=cache_pool)
 
     db_pool: psycopg_pool.AsyncConnectionPool = await get_pg_pool(
-        db_name=settings.postgres.name,
-        host=settings.postgres.host,
-        port=settings.postgres.port,
-        user=settings.postgres_user,
-        password=settings.postgres_password,
+        db_name=config.postgres.name,
+        host=config.postgres.host,
+        port=config.postgres.port,
+        user=config.postgres.user,
+        password=config.postgres.password,
     )
 
     translator_hub: TranslatorHub = create_translator_hub()
 
     dp.workflow_data.update(
         redis_source=redis_source,
-        bot_locales=sorted(settings.i18n.locales),
+        bot_locales=sorted(config.i18n.locales),
         translator_hub=translator_hub,
         db_pool=db_pool,
     )
@@ -119,16 +121,16 @@ async def main():
             dp.start_polling(
                 bot,
                 js=js,
-                delay_del_subject=settings.nats.delayed_consumer_subject,
+                delay_del_subject=config.nats.delayed_consumer_subject,
                 bg_factory=bg_factory,
             ),
             start_delayed_consumer(
                 nc=nc,
                 js=js,
                 bot=bot,
-                subject=settings.nats.delayed_consumer_subject,
-                stream=settings.nats.delayed_consumer_stream,
-                durable_name=settings.nats.delayed_consumer_durable_name,
+                subject=config.nats.delayed_consumer_subject,
+                stream=config.nats.delayed_consumer_stream,
+                durable_name=config.nats.delayed_consumer_durable_name,
             ),
         )
     except Exception as e:

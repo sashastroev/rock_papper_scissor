@@ -1,12 +1,13 @@
 from fluent_compiler.bundle import FluentBundle
 from fluentogram import FluentTranslator, TranslatorHub
 
-from config.config import settings
+from config.config import get_config
 
 DIR_PATH = "locales"
 
 
 def create_translator_hub() -> TranslatorHub:
+    config = get_config()
     translator_hub = TranslatorHub(
         {"ru": ("ru", "en"), "en": ("en", "ru")},
         [
@@ -27,6 +28,6 @@ def create_translator_hub() -> TranslatorHub:
                 ),
             ),
         ],
-        root_locale=settings.i18n.default_locale,
+        root_locale=config.i18n.default_locale,
     )
     return translator_hub
