@@ -1,48 +1,57 @@
-from typing import List, Optional
+from aiogram.enums import ParseMode
 from dynaconf import Dynaconf
 from pydantic import BaseModel, Field
 
 
 class LogsConfig(BaseModel):
-    level_name: str = Field(alias="LEVEL_NAME")
-    format: Optional[str] = Field(default=None, alias="FORMAT")
+    level_name: str = Field(
+        default="INFO", description="Log level name (e.g. DEBUG, INFO, WARNING, ERROR)."
+    )
+    format: str = Field(
+        default="%(asctime)s [%(levelname)s] %(message)s",
+        description="Log message format."
+    )
 
 
 class I18nConfig(BaseModel):
-    default_locale: str = Field(alias="default_locale")
-    locales: List[str] = Field(alias="locales")
+    default_locale: str = Field(default="en", description="Default locale for the application.")
+    locales: list[str] = Field(default=["en"], description="List of supported locales.")
 
 
 class BotConfig(BaseModel):
-    token: str = Field(alias="TOKEN")
-    parse_mode: str = Field(alias="PARSE_MODE")
+    token: str = Field(..., description="Telegram bot API token.")
+    parse_mode: ParseMode = Field(
+        ..., description="Default parse mode for sending messages (e.g. HTML, Markdown)."
+    )
 
 
 class PostgresConfig(BaseModel):
-    name: str = Field(alias="NAME")
-    host: str = Field(alias="HOST")
-    port: int = Field(alias="PORT")
-    user: str = Field(alias="USER")
-    password: str = Field(alias="PASSWORD")
+    name: str = Field(..., description="PostgreSQL database name.")
+    host: str = Field(..., description="PostgreSQL server hostname.")
+    port: int = Field(..., description="PostgreSQL server port.")
+    user: str = Field(..., description="PostgreSQL username.")
+    password: str = Field(..., description="PostgreSQL user password.")
 
 
 class RedisConfig(BaseModel):
-    host: str = Field(alias="HOST")
-    port: int = Field(alias="PORT")
-    database: int = Field(alias="DATABASE")
-    username: Optional[str] = Field(default=None, alias="USERNAME")
-    password: Optional[str] = Field(default=None, alias="PASSWORD")
+    host: str = Field(default="localhost", description="Redis server hostname.")
+    port: int = Field(default=6379, description="Redis server port.")
+    database: int = Field(default=0, description="Redis database index.")
+    username: str | None = Field(None, description="Optional Redis username.")
+    password: str | None = Field(None, description="Optional Redis password.")
 
 
 class NatsConfig(BaseModel):
-    servers: str = Field(alias="SERVERS")
-    delayed_consumer_subject: str = Field(alias="DELAYED_CONSUMER_SUBJECT")
-    delayed_consumer_stream: str = Field(alias="DELAYED_CONSUMER_STREAM")
-    delayed_consumer_durable_name: str = Field(alias="DELAYED_CONSUMER_DURABLE_NAME")
+    servers: str | list[str] = Field(..., description="NATS servers.")
+    delayed_consumer_subject: str = Field(..., description="NATS subject for delayed consumer.")
+    delayed_consumer_stream: str = Field(..., description="NATS stream for delayed messages.")
+    delayed_consumer_durable_name: str = Field(
+        ..., description="Durable consumer name for delayed processing."
+    )
 
 
 class CacheConfig(BaseModel):
-    use_cache: bool = Field(alias="USE_CACHE")
+    use_cache: bool = Field(..., description="Enable or disable in-memory cache usage.")
 
 
 class AppConfig(BaseModel):
@@ -67,54 +76,51 @@ _settings = Dynaconf(
 
 def get_config() -> AppConfig:
     """
-    Возвращает типизированную конфигурацию приложения.
-    
-    Returns:
-        AppConfig: Валидированная Pydantic модель с настройками приложения
+        Returns a typed application configuration.
+
+        Returns:
+            AppConfig: A validated Pydantic model containing the application settings.
     """
-    # Создаем модели напрямую из данных Dynaconf
-    logs = LogsConfig.model_validate({
-        "LEVEL_NAME": _settings.logs.level_name,
-        "FORMAT": _settings.logs.format,
-    })
-    
-    i18n = I18nConfig.model_validate({
-        "default_locale": _settings.i18n.default_locale,
-        "locales": _settings.i18n.locales,
-    })
-    
-    bot = BotConfig.model_validate({
-        "TOKEN": _settings.bot_token,
-        "PARSE_MODE": _settings.bot.parse_mode,
-    })
-    
-    postgres = PostgresConfig.model_validate({
-        "NAME": _settings.postgres.name,
-        "HOST": _settings.postgres.host,
-        "PORT": _settings.postgres.port,
-        "USER": _settings.postgres.user,
-        "PASSWORD": _settings.postgres_password,
-    })
-    
-    redis = RedisConfig.model_validate({
-        "HOST": _settings.redis.host,
-        "PORT": _settings.redis.port,
-        "DATABASE": _settings.redis.database,
-        "USERNAME": _settings.redis_username,
-        "PASSWORD": _settings.redis_password,
-    })
-    
-    nats = NatsConfig.model_validate({
-        "SERVERS": _settings.nats.servers,
-        "DELAYED_CONSUMER_SUBJECT": _settings.nats.delayed_consumer_subject,
-        "DELAYED_CONSUMER_STREAM": _settings.nats.delayed_consumer_stream,
-        "DELAYED_CONSUMER_DURABLE_NAME": _settings.nats.delayed_consumer_durable_name,
-    })
-    
-    cache = CacheConfig.model_validate({
-        "USE_CACHE": _settings.cache.use_cache,
-    })
-    
+    logs = LogsConfig(
+        level_name=_settings.logs.level_name,
+        format=_settings.logs.format,
+    )
+
+    i18n = I18nConfig(
+        default_locale=_settings.i18n.default_locale,
+        locales=_settings.i18n.locales,
+    )
+
+    bot = BotConfig(
+        token=_settings.bot_token,
+        parse_mode=_settings.bot.parse_mode,
+    )
+
+    postgres = PostgresConfig(
+        name=_settings.postgres.name,
+        host=_settings.postgres.host,
+        port=_settings.postgres.port,
+        user=_settings.postgres.user,
+        password=_settings.postgres_password,
+    )
+
+    redis = RedisConfig(
+        host=_settings.redis.host,
+        port=_settings.redis.port,
+        database=_settings.redis.database,
+        username=_settings.redis_username,
+        password=_settings.redis_password,
+    )
+
+    nats = NatsConfig(
+        servers=_settings.nats.servers,
+        delayed_consumer_subject=_settings.nats.delayed_consumer_subject,
+        delayed_consumer_stream=_settings.nats.delayed_consumer_stream,
+        delayed_consumer_durable_name=_settings.nats.delayed_consumer_durable_name,
+    )
+
+    cache = CacheConfig(use_cache=_settings.cache.use_cache)
+
     return AppConfig(
         logs=logs,
         i18n=i18n,
@@ -124,7 +130,3 @@ def get_config() -> AppConfig:
         nats=nats,
         cache=cache,
     )
-
-
-# Для обратной совместимости оставляем объект settings
-settings = _settings
