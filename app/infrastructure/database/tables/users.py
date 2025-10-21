@@ -91,17 +91,19 @@ class UsersTable(BaseTable):
         )
 
     async def update_user_lang(self, *, user_id: int, user_lang: str) -> None:
-        await self.connection.execute(
+        data = await self.connection.update_and_fetchone(
             sql="""
                 UPDATE users
                 SET language = %s
                 WHERE user_id = %s
+                RETURNING *;
             """,
             params=(user_lang, user_id),
         )
         self._log(
             UsersTableAction.UPDATE_USER_LANG, user_id=user_id, user_lang=user_lang
         )
+        return data.to_model(model=UserModel, raise_if_empty=True)
 
     async def update_banned_status(self, *, user_id: int, banned: bool = False) -> None:
         await self.connection.execute(

@@ -37,9 +37,10 @@ async def update_user_lang(
     i18n: TranslatorRunner = translator_hub.get_translator_by_locale(checked_locale)
     dialog_manager.middleware_data["i18n"] = i18n
 
-    await db.users.update_user_lang(
+    user_row: UserModel = await db.users.update_user_lang(
         user_id=callback.from_user.id, user_lang=checked_locale
     )
+    dialog_manager.middleware_data["user_row"] = user_row
     await bot.set_my_commands(
         commands=get_main_menu_commands(i18n=i18n),
         scope=BotCommandScopeChat(
