@@ -23,11 +23,16 @@ class TranslatorRunnerMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         user_row: UserModel = data.get("user_row")
+        default_locale = data.get("default_locale")
 
         if user_row and user_row.language:
             user_lang = user_row.language
         else:
-            user_lang = user.language_code
+            user_lang = (
+                user.language_code
+                if hasattr(user, "language_code") and user.language_code
+                else default_locale
+            )
 
         hub: TranslatorHub = data.get("translator_hub")
         data["i18n"] = hub.get_translator_by_locale(user_lang)
